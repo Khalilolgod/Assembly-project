@@ -1,6 +1,19 @@
 %include "asm_io.inc"
 
 segment .data
+msg1: db "1- Fill out matrix A",0
+msg2: db "2- Fill out matrix B",0
+msg3: db "3- A = A * B",0
+msg4: db "4- B = A * B",0
+msg5: db "5- A = B * A",0
+msg6: db "6- B = B * A",0
+msg7: db "7- Swap (A,B)",0
+msg8: db "8- A = B",0
+msg9: db "9- B = A",0
+msg10: db "0- Exit",0
+
+invalid_input: db "invalid input",0
+
 l1: db "getting A matrix axis (y*x)",0
 l2: db "Enter y : ",0
 l3: db "Enter x : ",0 
@@ -82,45 +95,85 @@ asm_main:
 	; mult(A,B,Ax,Ay,Bx)
 	;A*B
 
-	push dword [B_x]
-	push dword [A_y]
-	push dword [A_x]
-	push B
-	push A
-	call multMat
+	; push dword [B_x]
+	; push dword [A_y]
+	; push dword [A_x]
+	; push B
+	; push A
+	; call multMat
 
 
+	call print_menu
+
+; ;	prints A 
+; 	mov eax,[A_x]
+; 	push eax
+; 	mov eax,[A_y]
+; 	push eax
+; 	push A
+; 	call print_matrix
 
 
-;	prints A 
-	mov eax,[A_x]
-	push eax
-	mov eax,[A_y]
-	push eax
-	push A
-	call print_matrix
+; ;	prints A 
+; 	mov eax,[B_x]
+; 	push eax
+; 	mov eax,[B_y]
+; 	push eax
+; 	push B
+; 	call print_matrix
 
-
-;	prints A 
-	mov eax,[B_x]
-	push eax
-	mov eax,[B_y]
-	push eax
-	push B
-	call print_matrix
-
-	;prints Tmp 
-	mov eax,[Tmp_x]
-	push eax
-	mov eax,[Tmp_y]
-	push eax
-	push Tmp
-	call print_matrix
+	; ;prints Tmp 
+	; mov eax,[Tmp_x]
+	; push eax
+	; mov eax,[Tmp_y]
+	; push eax
+	; push Tmp
+	; call print_matrix
 
 
 
 	popa
 	leave
+	ret
+
+print_menu:
+	push msg1
+	call print
+	push msg2 
+	call print
+	push msg3 
+	call print
+	push msg4 
+	call print
+	push msg5 
+	call print
+	push msg6 
+	call print
+	push msg7 
+	call print
+	push msg8 
+	call print
+	push msg9 
+	call print
+	push msg10 
+	call print
+	ret
+
+menu:
+	call print_menu
+read:
+	call read_int
+	cmp eax,0
+	jg bad_input
+	cmp eax,10
+
+	cmp eax,0
+bad_input:
+	push invalid_input
+	print
+	jmp read
+
+end_process:
 	ret
 
 multMat:
@@ -339,6 +392,7 @@ print:
 
 	mov eax,[esp+8]
 	call print_string
+	call print_nl
 
 	mov ESP, EBP
 	pop EBP
