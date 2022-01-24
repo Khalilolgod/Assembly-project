@@ -23,6 +23,10 @@ segment .bss
 ; B_y: resd 1
 ; B_x: resd 1
 
+Tmp: resd 20
+Tmp_x: resd 1
+Tmp_y: resd 1
+
 segment .text
 
 global asm_main
@@ -60,14 +64,20 @@ asm_main:
 	; push A
 	; call get_matrix
 
-;	copies A to B
-	push B_x
-	push B_y
-	push A_x
-	push A_y
-	push B
-	push A
-	call copyTo
+; ;	copies B to A
+; 	push B_x
+; 	push B_y
+; 	push A_x
+; 	push A_y
+; 	push B
+; 	push A
+; 	call copyTo
+
+
+
+	; call swap
+
+
 
 ;	prints A 
 	mov eax,[A_x]
@@ -78,6 +88,14 @@ asm_main:
 	call print_matrix
 
 
+;	prints A 
+	mov eax,[B_x]
+	push eax
+	mov eax,[B_y]
+	push eax
+	push B
+	call print_matrix
+
 
 
 	popa
@@ -85,6 +103,34 @@ asm_main:
 	ret
 
 
+swap:
+	
+	push A_x
+	push A_y
+	push Tmp_x
+	push Tmp_y
+	push A
+	push Tmp
+	call copyTo
+
+	
+	push B_x
+	push B_y
+	push A_x
+	push A_y
+	push B
+	push A
+	call copyTo
+
+	push Tmp_x
+	push Tmp_y
+	push B_x
+	push B_y
+	push Tmp
+	push B
+	call copyTo
+
+	ret
 
 copyTo:
 	mov eax, [esp+24]
