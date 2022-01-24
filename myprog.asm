@@ -7,6 +7,8 @@ l3: db "Enter x : ",0
 l4: db "getting input for matrix ",0
 A: dd 1,2,3,4,5,6
 B: dd 2,4,6,8,10,12
+sum: dd 2
+
 
 A_y: dd 2
 A_x: dd 3
@@ -77,6 +79,17 @@ asm_main:
 
 	; call swap
 
+	; mult(A,B,Ax,Ay,Bx)
+	;A*B
+
+	push dword [B_x]
+	push dword [A_y]
+	push dword [A_x]
+	push B
+	push A
+	call multMat
+
+
 
 
 ;	prints A 
@@ -96,11 +109,89 @@ asm_main:
 	push B
 	call print_matrix
 
+	;prints Tmp 
+	mov eax,[Tmp_x]
+	push eax
+	mov eax,[Tmp_y]
+	push eax
+	push Tmp
+	call print_matrix
+
 
 
 	popa
 	leave
 	ret
+
+multMat:
+	push EBP
+	mov EBP, ESP
+
+	mov eax,[EBP+20]
+	mov [Tmp_y],eax
+
+	mov eax,[EBP+24]
+	mov [Tmp_x],eax
+
+	mov ecx,[Tmp_y]
+multL1:
+	mov esi,0
+
+	mov eax,[Tmp_y]
+	sub eax,ecx
+	mov ebx,[Tmp_x]
+	mul ebx
+	lea eax, [4*eax]
+	mov ebx,eax
+	multL2:
+
+		lea eax,[ebx + 4*esi]
+		add eax,Tmp
+		mov [sum],eax
+
+		mov edi,0
+		multL3:
+			mov eax,[Tmp_x]
+			mul edi
+			mov edx,4
+			mul edx
+			lea edx,[4*esi+eax]
+			add edx,[EBP+12]
+			mov edx,[edx]
+			push edx
+
+			mov eax,[Tmp_y]
+			sub eax,ecx
+			mul dword [EBP+16]
+			lea eax,[eax*4]
+			lea eax,[4*edi+eax]
+			add eax,[EBP+8]
+			mov eax,[eax]
+
+			pop edx
+			mul edx			
+			
+			mov edx,[sum]
+			mov edx,[edx]
+			add eax,edx
+			
+			mov edx,[sum]
+			mov [edx],eax
+
+
+			inc edi
+			cmp edi,[EBP+16]
+			jl multL3
+
+
+		inc esi 
+		cmp esi,[Tmp_x]
+		jl multL2
+	dec ecx
+	jnz multL1
+	mov ESP, EBP
+	pop EBP
+	ret 20 
 
 
 swap:
