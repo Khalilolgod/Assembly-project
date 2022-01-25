@@ -10,7 +10,9 @@ msg6: db "6- B = B * A",0
 msg7: db "7- Swap (A,B)",0
 msg8: db "8- A = B",0
 msg9: db "9- B = A",0
-msg10: db "0- Exit",0
+msg10: db "10- Print A",0
+msg11: db "11- Print B",0
+msg0: db "0- Exit",0
 
 invalid_input: db "invalid input",0
 
@@ -18,20 +20,24 @@ l1: db "getting A matrix axis (y*x)",0
 l2: db "Enter y : ",0
 l3: db "Enter x : ",0 
 l4: db "getting input for matrix ",0
-A: dd 1,2,3,4,5,6
-B: dd 2,4,6,8,10,12
+l5: db "matrix A not initialized",0
+l6: db "matrix B not initialized",0
+l7: db "invalid axis for multlipication ",0
+
+; A: dd 1,2,3,4,5,6
+; B: dd 2,4,6,8,10,12
 sum: dd 2
 
 
-A_y: dd 2
-A_x: dd 3
-B_y: dd 3
-B_x: dd 2
+A_y: dd 0
+A_x: dd 0
+B_y: dd 0
+B_x: dd 0
 
 
 segment .bss
-; A: resd 625
-; B: resd 625
+A: resd 625
+B: resd 625
 
 ; A_y: resd 1
 ; A_x: resd 1
@@ -50,68 +56,14 @@ asm_main:
 	enter 0,0
 	pusha
 
-	; push l1
-	; call print
-	; call print_nl
-
-	; push l2
-	; call print
-
-	; call read_int
-	; mov [A_y],eax
-	
-
-	; push l3
-	; call print
-
-	; call read_int
-	; mov [A_x],eax
-
-	; call print_nl
-	; push l4
-	; call print
-	; call print_nl
-
-	; mov eax,[A_x]
-	; push eax
-	; mov eax,[A_y]
-	; push eax
-	; push A
-	; call get_matrix
-
-; ;	copies B to A
-; 	push B_x
-; 	push B_y
-; 	push A_x
-; 	push A_y
-; 	push B
-; 	push A
-; 	call copyTo
 
 
 
-	; call swap
-
-	; mult(A,B,Ax,Ay,Bx)
-	;A*B
-
-	; push dword [B_x]
-	; push dword [A_y]
-	; push dword [A_x]
-	; push B
-	; push A
-	; call multMat
 
 
-	call print_menu
+	call menu
 
-; ;	prints A 
-; 	mov eax,[A_x]
-; 	push eax
-; 	mov eax,[A_y]
-; 	push eax
-; 	push A
-; 	call print_matrix
+
 
 
 ; ;	prints A 
@@ -157,24 +109,346 @@ print_menu:
 	call print
 	push msg10 
 	call print
+	push msg11 
+	call print
+	push msg0 
+	call print
 	ret
 
 menu:
+	call print_nl
 	call print_menu
 read:
 	call read_int
 	cmp eax,0
+	jl bad_input
+	cmp eax,11
 	jg bad_input
+	cmp eax, 0
+	je end_process
+	cmp eax,1
+	je getinput_A
+	cmp eax,2
+	je getinput_B
+	cmp eax,3
+	je a_mult_ab
+	cmp eax,4
+	je  b_mult_ab
+	cmp eax,5
+	je  a_mult_ba
+	cmp eax,6
+	je  b_mult_ba
+	cmp eax,7
+	je Swap
+	cmp eax,8
+	je A_equals_B
+	cmp eax,9
+	je B_equals_A
 	cmp eax,10
-
-	cmp eax,0
+	je print_A
+	cmp eax,11
+	je print_B
 bad_input:
 	push invalid_input
-	print
+	call print
 	jmp read
 
 end_process:
 	ret
+getinput_A:
+	push l1
+	call print
+
+	mov eax,l2
+	call print_string
+
+	call read_int
+	mov [A_y],eax
+	
+
+	mov eax,l3
+	call print_string
+
+	call read_int
+	mov [A_x],eax
+
+	call print_nl
+	push l4
+	call print
+
+	mov eax,[A_x]
+	push eax
+	mov eax,[A_y]
+	push eax
+	push A
+	call get_matrix
+	jmp menu
+
+print_A:
+	
+	call checkA
+	cmp eax,0
+	je menu
+
+	mov eax,[A_x]
+	push eax
+	mov eax,[A_y]
+	push eax
+	push A
+	call print_matrix
+	jmp menu
+
+getinput_B:
+
+	push l1
+	call print
+
+	mov eax,l2
+	call print_string
+
+	call read_int
+	mov [B_y],eax
+	
+
+	mov eax,l3
+	call print_string
+
+	call read_int
+	mov [B_x],eax
+
+	call print_nl
+	push l4
+	call print
+
+	mov eax,[B_x]
+	push eax
+	mov eax,[B_y]
+	push eax
+	push B
+	call get_matrix
+	jmp menu
+
+print_B:
+
+	call checkB
+	cmp eax,0
+	je menu
+
+	mov eax,[B_x]
+	push eax
+	mov eax,[B_y]
+	push eax
+	push B
+	call print_matrix
+	jmp menu
+
+A_equals_B:
+
+	call checkB
+	cmp eax,0
+	je menu
+
+	push B_x
+	push B_y
+	push A_x
+	push A_y
+	push B
+	push A
+	call copyTo
+	jmp menu
+B_equals_A:
+
+	call checkA
+	cmp eax,0
+	je menu
+
+	push A_x
+	push A_y
+	push B_x
+	push B_y
+	push A
+	push B
+	call copyTo
+	jmp menu
+
+a_mult_ab:
+	; mult(A,B,Ax,Ay,Bx)
+	;A*B
+
+	call checkA
+	cmp eax,0
+	je menu
+
+	call checkB
+	cmp eax,0
+	je menu
+
+	call checkMultAB
+	cmp eax,0
+	je menu
+
+	push dword [B_x]
+	push dword [A_y]
+	push dword [A_x]
+	push B
+	push A
+	call multMat
+	
+	push Tmp_x
+	push Tmp_y
+	push A_x
+	push A_y
+	push Tmp
+	push A
+	call copyTo
+	jmp menu
+
+b_mult_ab:
+
+	call checkA
+	cmp eax,0
+	je menu
+
+	call checkB
+	cmp eax,0
+	je menu
+
+	call checkMultAB
+	cmp eax,0
+	je menu
+
+	push dword [B_x]
+	push dword [A_y]
+	push dword [A_x]
+	push B
+	push A
+	call multMat
+	
+	push Tmp_x
+	push Tmp_y
+	push B_x
+	push B_y
+	push Tmp
+	push B
+	call copyTo
+	jmp menu
+
+a_mult_ba:
+
+	call checkA
+	cmp eax,0
+	je menu
+
+	call checkB
+	cmp eax,0
+	je menu
+
+	call checkMultBA
+	cmp eax,0
+	je menu
+
+	push dword [A_x]
+	push dword [B_y]
+	push dword [B_x]
+	push A
+	push B
+	call multMat
+	
+	push Tmp_x
+	push Tmp_y
+	push A_x
+	push A_y
+	push Tmp
+	push A
+	call copyTo
+	jmp menu
+
+b_mult_ba:
+
+	call checkA
+	cmp eax,0
+	je menu
+
+	call checkB
+	cmp eax,0
+	je menu
+
+	call checkMultBA
+	cmp eax,0
+	je menu
+
+	push dword [A_x]
+	push dword [B_y]
+	push dword [B_x]
+	push A
+	push B
+	call multMat
+	
+	push Tmp_x
+	push Tmp_y
+	push B_x
+	push B_y
+	push Tmp
+	push B
+	call copyTo
+	jmp menu
+
+checkA:
+	cmp dword [A_x],0
+	je printInitA
+	cmp dword [A_y],0
+	jne endCheckA
+printInitA:
+	push l5
+	call print
+	mov eax,0
+	ret
+endCheckA:
+	mov eax,1
+	ret
+	
+checkB:
+	cmp dword [B_x],0
+	je printInitB
+	cmp dword [B_y],0
+	jne endCheckB
+printInitB:
+	push l6
+	call print
+	mov eax,0
+	ret
+endCheckB:
+	mov eax,1
+	ret
+
+checkMultAB:
+	mov eax,[A_x]
+	cmp eax,dword [B_y]
+	jne ABerror
+	mov eax,1
+	ret
+ABerror:
+	call printAxisError
+	mov eax,0
+	ret
+
+checkMultBA:
+	mov eax,[B_x]
+	cmp eax,dword [A_y]
+	jne BAerror
+	mov eax,1
+	ret
+BAerror:
+	call printAxisError
+	mov eax,0
+	ret
+
+
+printAxisError:
+	push l7
+	call print
+	ret
+
 
 multMat:
 	push EBP
@@ -247,8 +521,16 @@ multL1:
 	ret 20 
 
 
-swap:
+Swap:
 	
+	call checkA
+	cmp eax,0
+	je menu
+
+	call checkB
+	cmp eax,0
+	je menu
+
 	push A_x
 	push A_y
 	push Tmp_x
@@ -274,7 +556,7 @@ swap:
 	push B
 	call copyTo
 
-	ret
+	jmp menu
 
 copyTo:
 	mov eax, [esp+24]
